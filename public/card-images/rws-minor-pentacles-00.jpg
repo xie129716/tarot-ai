@@ -1,0 +1,24 @@
+<html>
+<title>404 - page not found</title>
+<body>
+	<div style="text-align:center;">
+		<h1>404 - page not found</h1>
+		<img src="/.404.png" alt="Hina Nitta sign saying Give page, please! 404" />
+		<hr>
+		<div>This server can also be reached on the Tor network at</div>
+		<div><a href="http://lysator7eknrfl47rlyxvgeamrv7ucefgrrlhk7rouv3sna25asetwid.onion/">lysator7eknrfl47rlyxvgeamrv7ucefgrrlhk7rouv3sna25asetwid.onion</a></div>
+	</div>
+	<script>
+		(function() {
+			const e = document.querySelector('img');
+			const i = [
+				[e.src, e.alt],
+				['/.anzu_404.jpg', 'Anzu holding a receipt and exclaiming 404?!'],
+			];
+			const r = Math.random()*i.length|0;
+			e.src = i[r][0];
+			e.alt = i[r][1];
+		})();
+	</script>
+</body>
+</html>
