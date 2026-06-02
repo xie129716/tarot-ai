@@ -70,7 +70,6 @@ const BAIDU_TO_GESTURE: Record<string, GestureType> = {
   One: GestureType.PRAYER,            // 数字1/食指 → 旋转
   Five: GestureType.OPEN_PALM,        // 数字5/张开手掌 → 确认选择
   Palm_up: GestureType.OPEN_PALM,     // 掌心向上 → 确认选择
-  Fist: GestureType.FIST,             // 拳头 → 确认选择
 };
 
 export interface BaiduGestureResult {

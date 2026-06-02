@@ -228,15 +228,6 @@ export default function HomePage() {
           }
           break;
 
-        case GestureType.FIST:
-          if (Date.now() - lastSelectRef.current > SELECT_COOLDOWN_MS) {
-            lastSelectRef.current = Date.now();
-            handleCardSelect();
-          }
-          if (carouselPhaseRef.current === 'rotating') {
-            setCarouselWithCooldown('idle');
-          }
-          break;
         // Other/unknown → ignore
       }
     },
