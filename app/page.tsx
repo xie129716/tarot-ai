@@ -254,7 +254,7 @@ export default function HomePage() {
     useHandTracking({
       enabled: gestureEnabled,
       onGestureResult: processResult,
-      captureIntervalMs: 1000, // 1 call/sec, safely under Baidu QPS limit
+      captureIntervalMs: 620,
     });
   // Wire refs for camera start/stop from effects defined before the hook
   useEffect(() => { stopCameraRef.current = stopCamera; startCameraRef.current = startCamera; }, [stopCamera, startCamera]);
