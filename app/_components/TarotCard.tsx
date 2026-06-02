@@ -87,17 +87,24 @@ export default function TarotCard({
           )}
 
           {/* RWS Card Image — full bleed */}
-          <img
-            src={card.imagePath}
-            alt={card.name}
-            className={cn(
-              'absolute inset-0 w-full h-full object-cover',
-              orientation === 'reversed' && 'rotate-180'
-            )}
-            onError={(e) => {
-              (e.target as HTMLImageElement).style.display = 'none';
-            }}
-          />
+          {card.imagePath ? (
+            <img
+              src={card.imagePath}
+              alt={card.name}
+              className={cn(
+                'absolute inset-0 w-full h-full object-cover',
+                orientation === 'reversed' && 'rotate-180'
+              )}
+              loading="eager"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = 'none';
+              }}
+            />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center text-purple-400/50 text-xs">
+              {card.name}
+            </div>
+          )}
 
           {/* Card name overlay at bottom */}
           <div className="absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-slate-950/95 via-slate-950/70 to-transparent pt-8 pb-2 px-2">

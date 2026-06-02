@@ -266,15 +266,22 @@ export default function TarotCarousel({
                       className="absolute inset-0 rounded-xl border-2 border-amber-500/40 overflow-hidden"
                       style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
                     >
-                      <img
-                        src={card.imagePath}
-                        alt={card.name}
-                        className="w-full h-full object-cover"
-                        style={{
-                          transform: orientations.get(card.id) === 'reversed' ? 'rotate(180deg)' : 'none',
-                        }}
-                        onError={(e) => { (e.target as HTMLImageElement).style.opacity = '0.3'; }}
-                      />
+                      {card.imagePath ? (
+                        <img
+                          src={card.imagePath}
+                          alt={card.name}
+                          className="w-full h-full object-cover"
+                          style={{
+                            transform: orientations.get(card.id) === 'reversed' ? 'rotate(180deg)' : 'none',
+                          }}
+                          loading="eager"
+                          onError={(e) => { (e.target as HTMLImageElement).style.opacity = '0.3'; }}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-purple-400/50 text-xs">
+                          {card.name}
+                        </div>
+                      )}
                       {/* Name overlay */}
                       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-slate-950/95 to-transparent pt-6 pb-1.5 px-2">
                         <p className="text-[8px] font-bold text-amber-200 text-center leading-tight">{card.name}</p>
