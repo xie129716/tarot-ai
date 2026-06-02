@@ -66,10 +66,11 @@ async function getAccessToken(): Promise<string> {
 //   Open palm (Five/Palm_up) → select card
 //   OK → select card (alternative)
 const BAIDU_TO_GESTURE: Record<string, GestureType> = {
-  Prayer: GestureType.PRAYER,         // 祈祷 → 开始/继续旋转卡牌
+  Prayer: GestureType.PRAYER,         // 祈祷 → 旋转
+  One: GestureType.PRAYER,            // 数字1/食指 → 旋转
   Five: GestureType.OPEN_PALM,        // 数字5/张开手掌 → 确认选择
   Palm_up: GestureType.OPEN_PALM,     // 掌心向上 → 确认选择
-  Fist: GestureType.FIST,             // 拳头 → 备用（无操作）
+  Fist: GestureType.FIST,             // 拳头 → 确认选择
 };
 
 export interface BaiduGestureResult {
