@@ -1,10 +1,13 @@
-# 🔮 星辰之镜 — AI塔罗牌占卜
+# 星辰之镜 — AI塔罗牌占卜
 
-> **Star Mirror Tarot** — 百度手势识别 × DeepSeek AI 流式解牌 × 78张RWS塔罗牌
+> 手势识别选牌 × DeepSeek AI 流式解牌 × 78张RWS塔罗牌
 
-![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js) ![DeepSeek](https://img.shields.io/badge/AI-DeepSeek_V3-purple) ![Baidu](https://img.shields.io/badge/Gesture-百度智能云-orange) ![Vercel](https://img.shields.io/badge/Deploy-Vercel-black)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org)
+[![DeepSeek](https://img.shields.io/badge/AI-DeepSeek_V3-purple)](https://platform.deepseek.com)
+[![MediaPipe](https://img.shields.io/badge/Gesture-MediaPipe_30fps-orange)](https://developers.google.com/mediapipe)
+[![Vercel](https://img.shields.io/badge/Deploy-Vercel-black)](https://vercel.com)
 
-[在线体验](https://tarot-ai.vercel.app) | [GitHub](https://github.com/your-username/tarot-ai)
+**线上地址：[soe.9vvn.com](https://soe.9vvn.com)**
 
 ---
 
@@ -28,26 +31,18 @@
 WELCOME → SHUFFLING → CARD_SELECTION(3D旋转) → READING → COMPLETE → CHAT
 ```
 
-1. **选择牌阵** (单张 / 三张 / 凯尔特十字)
-2. **洗牌动画** → 进入 78 张牌 3D 旋转环
+1. **选择牌阵** — 单张指引 / 过去现在未来(3张) / 凯尔特十字(10张)
+2. **洗牌动画** — 78张卡牌3D旋转环就绪
 3. **手势选牌**:
-   - 🙏 **祈祷 Prayer** — 保持手势让卡牌旋转，松手即停
-   - 🖐️ **张手** — 中心卡牌翻转露出 RWS 画面，确认选择
-4. **继续旋转** — 已选卡牌打 ✓ 标记虚化，选下一张
-5. **全选完毕** → 自动关闭摄像头 → AI 流式解读
-6. **追问** — 底部聊天窗口，保持解读上下文连贯
-
-### 手势交互
-
-| 百度手势 | 动作 |
-|---------|------|
-| 祈祷 Prayer | 卡牌3D旋转（松手即停） |
-| 数字5 / 掌心向上 | 确认选择当前卡牌 |
-| 拳头 Fist | 备用 |
+   - 🖐️ **张手(数字5)** — 卡牌旋转（松手即停，反向吸附到最近卡牌）
+   - ☝️ **食指(数字1)** — 中心卡牌翻转为RWS正面，确认选择
+4. **继续旋转** — 已选卡牌打✓虚化，继续选下一张
+5. **全选完毕** → 自动关闭摄像头 → **AI流式解读**（逐行实时渲染）
+6. **追问** — 底部聊天窗口，保持解读上下文连贯，支持Function Calling查牌
 
 ### 降级方案
-- 无摄像头 → 手动按钮控制旋转 / 选择
-- 移动端 → 触摸操作
+- 无摄像头 → 手动按钮控制旋转/选择
+- 移动端 → 触摸操作 + 手势均可
 
 ---
 
@@ -57,30 +52,33 @@ WELCOME → SHUFFLING → CARD_SELECTION(3D旋转) → READING → COMPLETE → 
 ┌─────────────────────────────────────────────────────┐
 │                   Browser (Client)                    │
 │                                                       │
-│  ┌──────────┐   ┌────────────┐   ┌───────────────┐  │
-│  │ Webcam   │   │  Canvas    │   │ 3D Carousel   │  │
-│  │ getUser  │──▶│ 截帧→Base64│   │ 78张牌 旋转环 │  │
-│  │ Media    │   │ (每300ms)  │   │ framer-motion │  │
-│  └──────────┘   └─────┬──────┘   └───────┬───────┘  │
-│                       │                    │          │
-│                 POST /api/gesture    POST /api/      │
-│                 (Base64图片)         reading/chat    │
-│                       │              (流式SSE)       │
-└───────────────────────┼────────────────────┬─────────┘
-                        │                    │
-┌───────────────────────┼────────────────────┼─────────┐
+│  ┌──────────┐   ┌──────────────┐   ┌─────────────┐  │
+│  │ Webcam   │   │  MediaPipe   │   │ 3D Carousel  │  │
+│  │ 640×480  │──▶│  Hands WASM  │   │ 78张牌旋转环 │  │
+│  │ 30fps    │   │  21 landmarks│   │ CSS 3D       │  │
+│  └──────────┘   └──────┬───────┘   └──────┬──────┘  │
+│                        │                    │         │
+│                 手势分类器               POST /api/   │
+│                 (browser端)            reading/chat   │
+│                 PRAYER/OPEN_PALM       (流式SSE)      │
+└────────────────────────┼────────────────────┬────────┘
+                         │                    │
+┌────────────────────────┼────────────────────┼────────┐
 │              Next.js API Routes (Server)              │
-│                       │                    │          │
-│  ┌────────────────────▼──────┐  ┌─────────▼────────┐ │
-│  │  /api/gesture             │  │ /api/reading     │ │
-│  │  → 百度手势识别API        │  │ /api/chat        │ │
-│  │  → 24种手势分类           │  │ → DeepSeek V3    │ │
-│  │  → Prayer/Five/Fist       │  │ → 4层Prompt组装  │ │
-│  │  → 映射到App手势          │  │ → Function Call  │ │
-│  └───────────────────────────┘  │ → 流式SSE响应   │ │
-│                                  └──────────────────┘ │
-│                       Deploy: Vercel                  │
-└─────────────────────────────────────────────────────┘
+│                        │                    │         │
+│  ┌─────────────────────▼──────────────────────┐      │
+│  │  /api/reading  — 流式塔罗解牌              │      │
+│  │  /api/chat     — 流式追问 + Function Call  │      │
+│  │                                              │      │
+│  │  → DeepSeek V3 (via Vercel AI SDK v6)       │      │
+│  │  → 5层动态Prompt组装                        │      │
+│  │  → streamText() → toTextStreamResponse()    │      │
+│  │  → Function Calling: getCardDetail          │      │
+│  │  → Token用量追踪                             │      │
+│  └──────────────────────────────────────────────┘      │
+│                                                       │
+│  Deploy: Vercel (HTTPS + Custom Domain)               │
+└───────────────────────────────────────────────────────┘
 ```
 
 ### 项目结构
@@ -88,42 +86,42 @@ WELCOME → SHUFFLING → CARD_SELECTION(3D旋转) → READING → COMPLETE → 
 ```
 tarot-ai/
 ├── app/
-│   ├── page.tsx                     # 主流程状态机 (8阶段)
-│   ├── layout.tsx                   # SEO + sonner toast
-│   ├── globals.css                  # 暗黑神秘主题 + 星空动画
+│   ├── page.tsx                     # 主流程状态机 (6阶段)
+│   ├── layout.tsx                   # SEO元数据 + sonner toast
+│   ├── globals.css                  # 暗黑神秘主题
 │   ├── api/
-│   │   ├── reading/route.ts         # 流式塔罗解牌
+│   │   ├── reading/route.ts         # 流式塔罗解牌 DeepSeek
 │   │   ├── chat/route.ts            # 流式追问 + Function Calling
-│   │   └── gesture/route.ts         # 百度手势识别代理
+│   │   └── gesture/route.ts         # 手势识别代理(备用)
 │   └── _components/
-│       ├── TarotCarousel.tsx        # 78张牌3D旋转环 (核心)
-│       ├── TarotCard.tsx            # 单张卡牌 (3D翻转)
-│       ├── TarotSpread.tsx          # 牌阵布局
+│       ├── TarotCarousel.tsx        # 78张牌CSS 3D旋转环
+│       ├── TarotCard.tsx            # 单张卡牌3D翻转
+│       ├── TarotSpread.tsx          # 牌阵Grid布局
 │       ├── CardDeck.tsx             # 洗牌动画
-│       ├── ReadingPanel.tsx         # 逐字流式显示
+│       ├── ReadingPanel.tsx         # 流式文字渲染
 │       ├── ChatPanel.tsx            # 追问聊天面板
-│       ├── GestureOverlay.tsx       # 手势状态指示器
+│       ├── GestureOverlay.tsx       # 摄像头预览+手势状态
 │       └── GestureHint.tsx          # 手势教程
 ├── hooks/
-│   ├── useHandTracking.ts           # 摄像头 + Canvas截帧
-│   ├── useGestureClassification.ts  # 手势分类 + 迟滞
+│   ├── useHandTracking.ts           # 摄像头 + MediaPipe WASM
+│   ├── useGestureClassification.ts  # 手势分类 (30fps)
 │   ├── useCardSelection.ts          # 选牌状态机
-│   ├── useTarotReading.ts           # 流式解读 fetch + ReadableStream
-│   └── useTarotChat.ts              # 流式聊天 fetch + ReadableStream
+│   ├── useTarotReading.ts           # 流式解读 ReadableStream
+│   └── useTarotChat.ts              # 流式聊天 ReadableStream
 ├── lib/
 │   ├── tarot/
 │   │   ├── cards.ts                 # 78张塔罗牌完整数据
 │   │   └── spreads.ts               # 3种牌阵定义
 │   ├── ai/
 │   │   ├── prompts.ts               # System Prompt (5层动态组装)
-│   │   ├── context.ts               # 对话上下文剪裁
-│   │   ├── tools.ts                 # Function Calling工具
-│   │   └── baidu-gesture.ts         # 百度手势API客户端
+│   │   ├── context.ts               # 对话上下文裁剪
+│   │   ├── tools.ts                 # Function Calling工具定义
+│   │   └── baidu-gesture.ts         # 百度手势API客户端(备用)
 │   └── gestures/
 │       ├── types.ts                 # 手势枚举
 │       └── classifier.ts            # 手势分类器(备用)
 └── public/
-    └── card-images/                  # 78张RWS公共领域塔罗牌图片
+    └── card-images/                  # 78张RWS公共领域塔罗牌
 ```
 
 ---
@@ -132,76 +130,61 @@ tarot-ai/
 
 ### 设计理念
 
-Prompt不是一段静态文本，而是 **5层动态组合**，每次解读都针对用户的牌阵定制：
+Prompt 采用 **5层动态组合** 架构：静态层定义人格边界，动态层注入每次占卜的具体上下文。
 
-### Layer 1: Persona（人格层）
+### Layer 1: Persona（人格层）— 静态
 
 ```
 你是"星辰之镜"——一位温柔而充满灵性的AI塔罗占卜师。
-你的语调诗意而踏实，充满神秘但不故弄玄虚。
 你将塔罗牌视为人类灵魂的镜子，映照内心深处已然存在的真相。
+
+关键原则：
+- 你解读符号与能量，从不声称预测未来
+- 塔罗是镜子而非预言书
+- 即使"死神""高塔"也以"蜕变""觉醒"角度解读
+- 承认塔罗只是参考，最终选择权在求问者
 ```
 
-**设计思路**:
-- "星辰之镜"暗示反观内心，与塔罗作为"镜子"的隐喻一致
-- 明确禁止"预测未来"——伦理立场，也避免AI幻觉
-- 强调建设性——即使"死神""高塔"也有正向角度
+设计要点: "星辰之镜"暗示反观内心；明确禁止预测未来既是伦理立场也避免AI幻觉；建设性视角让负面牌也有正向解读。
 
-### Layer 2: Spread Context（牌阵上下文）
+### Layer 2: Spread Context（牌阵层）— 动态
 
-```typescript
-// 根据用户选择的牌阵动态注入每个位置的含义
-`本次使用「${spread.name}」牌阵。
-牌阵含义：
-- 「过去」位置：曾影响你的事件与能量
-- 「现在」位置：当前的状态与挑战
-- 「未来」位置：潜在的发展方向`
-```
+根据用户选择的牌阵动态注入每个位置的含义，让AI理解每张牌在牌阵中的角色。
 
-### Layer 3: Card Meanings（牌义注入）
+### Layer 3: Card Meanings（牌义层）— 动态
 
-```typescript
-// 将用户实际抽到的牌(含正逆位)直接注入prompt
-`第1张牌 · 过去位置：愚者（正位）
-  牌面意义：代表新的开始与无限可能...
-  关键词：新的开始、冒险、天真、自由、信念
-  象征：悬崖边缘的旅人，带着小小行囊仰望天空`
-```
-
-**设计思路**: 78张牌数据作为知识库，但只注入已选牌的上下文，节省token。
+将用户实际抽到的牌(含正逆位、关键词、象征意义)完整注入。78张牌数据作为知识库，但只注入已选牌以节省token。
 
 ### Layer 4: Output Format（输出结构）
 
 ```
-开场共鸣（2-3句）— 共情求问者心境
-逐牌解读（每张3-5句）— 结合位置含义
-综融叙事（4-6句）— 串联完整故事线
-温柔指引（3-4句）— 可操作的建议
-结语（1-2句）— 赋能结束语
-字数500-800字。纯文本，禁止Markdown符号和表情符号。
+开场共鸣 — 共情求问者心境
+逐牌解读 — 结合位置含义分析每张牌
+综融叙事 — 串联完整故事线
+温柔指引 — 可操作的具体建议
+结语 — 赋能结束语
+字数500-800字，纯文本，禁止Markdown符号和表情符号
 ```
-
-**设计思路**: 结构化输出确保体验一致性；禁止格式符号让AI输出更像真人对话。
 
 ### Layer 5: Ethical Boundaries（伦理边界）
 
 ```
-- 如遇自伤/自杀信号，温柔引导寻求专业心理帮助
+- 遇自伤/自杀信号，温柔引导寻求专业心理帮助
 - 不提供医疗、法律、金融等专业建议
-- 塔罗只是参考，最终选择权在求问者
+- 保持积极正面但不过度承诺
 ```
 
-### 追问对话的Prompt策略
+### 追问对话Prompt策略
 
-追问不是简单的对话续接，而是将完整解读上下文作为System Prompt重新注入——保持Persona连贯性并引用之前的解读内容。限制150-300字的精简回答。
+追问时将**完整解读上下文作为System Prompt重新注入**，保持Persona连贯。限制150-300字精简回答，要求像微信聊天一样自然表达，禁止所有格式符号。
 
 ---
 
 ## AI调用逻辑
 
-### 流式响应 (Streaming)
+### 流式响应 (Server → Client SSE)
 
-**服务端** — AI SDK v6 + DeepSeek:
+**服务端** (Vercel AI SDK v6):
 
 ```typescript
 // app/api/reading/route.ts
@@ -210,19 +193,19 @@ import { streamText } from 'ai';
 
 const result = streamText({
   model: deepseek('deepseek-chat'),
-  system: systemPrompt,      // 5层动态组装
+  system: systemPrompt,            // 5层动态组装
   messages: [{ role: 'user', content: userContent }],
   maxOutputTokens: 2000,
-  temperature: 0.8,          // 创造性解读
-  onFinish({ usage }) {      // Token用量追踪
+  temperature: 0.8,
+  onFinish({ usage }) {
+    // Token用量追踪
     console.log('[token-usage]', usage.inputTokens, usage.outputTokens);
   },
 });
-
-return result.toTextStreamResponse(); // Content-Type: text/plain 流式响应
+return result.toTextStreamResponse(); // Content-Type: text/plain
 ```
 
-**客户端** — 手动 ReadableStream 解析:
+**客户端** (手动ReadableStream):
 
 ```typescript
 // hooks/useTarotReading.ts
@@ -230,24 +213,21 @@ const response = await fetch('/api/reading', {
   method: 'POST',
   body: JSON.stringify({ cards, spreadType }),
 });
-
-const reader = response.body?.getReader();
+const reader = response.body.getReader();
 const decoder = new TextDecoder();
-let fullText = '';
-
 while (true) {
   const { done, value } = await reader.read();
   if (done) break;
-  fullText += decoder.decode(value, { stream: true });
-  setCompletion(fullText); // 实时更新UI
+  const text = decoder.decode(value, { stream: true });
+  setCompletion(prev => prev + text); // 实时逐段更新
 }
 ```
 
-**为什么不用 `useCompletion` hook**: 手动实现 ReadableStream 展示对底层流式协议的理解，错误处理和 AbortController 控制更灵活。
+选择手动实现而非`useCompletion` hook：展示对流式协议的底层理解，更灵活的AbortController控制。
 
 ### Function Calling (工具调用)
 
-追问对话中启用，AI 按需查询卡牌详情:
+追问对话中启用，AI按需查询卡牌详情而非每次请求携带全部78张牌数据:
 
 ```typescript
 // app/api/chat/route.ts
@@ -265,11 +245,9 @@ const result = streamText({
       },
     }),
   },
-  stopWhen: stepCountIs(3),   // 最多3轮工具调用
+  stopWhen: stepCountIs(3), // 最多3轮工具调用
 });
 ```
-
-**设计理由**: 不在每次请求把所有78张牌数据放入prompt → 节省token成本，AI按需调用工具获取详细信息。
 
 ### 上下文管理
 
@@ -290,7 +268,7 @@ export function trimConversation(messages, maxTokens = 7000) {
 }
 ```
 
-### Token 成本
+### Token成本
 
 | 场景 | Input | Output | 成本 |
 |------|-------|--------|------|
@@ -307,50 +285,45 @@ export function trimConversation(messages, maxTokens = 7000) {
 ### 技术架构
 
 ```
-摄像头 (30fps)
-    │
-    ▼
-Canvas 截帧 (每300ms)
-    │  toDataURL('image/jpeg', 0.7)
-    ▼
-POST /api/gesture { image: base64 }
-    │
-    ▼
-百度智能云手势识别API
-    │  POST https://aip.baidubce.com/rest/2.0/image-classify/v1/gesture
-    │  返回: { classname: "Prayer", probability: 0.95, ... }
-    ▼
-映射到 App 手势
-    │  Prayer → PRAYER (旋转)
-    │  Five/Palm_up → OPEN_PALM (选择)
-    │  Fist → FIST (备用)
-    ▼
-迟滞过滤 (连续4帧无手势才触发"释放")
-    │
-    ▼
-useCardSelection → UI 更新
+摄像头 640×480 @30fps
+    ↓
+MediaPipe HandLandmarker (WASM, GPU)
+    ↓ 21个3D关键点 × 2只手
+手指状态分类器 (PIP关节角度 > 155°)
+    ↓
+手势判定:
+  🖐️ 五指全伸直 → PRAYER (旋转)
+  ☝️ 仅食指伸直 → OPEN_PALM (选择)
+    ↓
+迟滞过滤 (8帧/250ms无手势才触发释放)
+    ↓
+useCardSelection → Carousel UI
 ```
 
-### 百度API集成
+### 为什么用MediaPipe而不是云端API
 
-```typescript
-// lib/ai/baidu-gesture.ts
-// 1. OAuth获取access_token (缓存30天)
-// 2. POST图片到手势识别接口
-// 3. 解析返回的classname映射到App手势
-const BAIDU_TO_GESTURE = {
-  Prayer: GestureType.PRAYER,      // 祈祷 → 旋转
-  Five: GestureType.OPEN_PALM,     // 数字5 → 选择
-  Palm_up: GestureType.OPEN_PALM,  // 掌心向上 → 选择
-};
-```
+| | MediaPipe | 云端API (百度等) |
+|------|-----------|-----------------|
+| 延迟 | 0ms（本地） | 200-500ms |
+| 帧率 | 30fps | ~1fps (QPS限制) |
+| 成本 | 免费 | 按量计费 |
+| 离线 | 支持 | 不支持 |
+| 稳定性 | 无网络依赖 | 依赖网络 |
 
-### 迟滞机制
+### 手势分类核心代码
 
 ```typescript
 // hooks/useGestureClassification.ts
-const NULL_THRESHOLD = 4; // 连续4帧(~1.2s)无手势才触发"释放"
-// 避免百度API偶尔漏检导致旋转意外停止
+function classifyFromLandmarks(hands: DetectedHand[]): GestureType | null {
+  if (hands.length === 0) return null;
+  const fingers = getFingerStates(hands[0].landmarks);
+  // 五指全伸直 → 旋转
+  if (Object.values(fingers).every(f => f === true)) return GestureType.PRAYER;
+  // 仅食指伸直 → 选择
+  if (fingers.index && !fingers.middle && !fingers.ring && !fingers.pinky)
+    return GestureType.OPEN_PALM;
+  return null;
+}
 ```
 
 ---
@@ -360,64 +333,67 @@ const NULL_THRESHOLD = 4; // 连续4帧(~1.2s)无手势才触发"释放"
 ### 1. GitHub
 
 ```bash
-git init && git add . && git commit -m "Initial commit"
+git init
+git add .
+git commit -m "feat: AI tarot app"
 git remote add origin https://github.com/your-username/tarot-ai.git
 git push -u origin main
 ```
 
-### 2. Vercel
+### 2. Vercel 部署
 
-1. [vercel.com/new](https://vercel.com/new) → Import GitHub repo
-2. 自动识别 Next.js，无需配置
+1. 打开 [vercel.com/new](https://vercel.com/new)
+2. Import GitHub 仓库，自动识别 Next.js
 3. 添加 Environment Variables:
 
 | Key | 获取地址 |
 |-----|---------|
-| `DEEPSEEK_API_KEY` | [platform.deepseek.com](https://platform.deepseek.com/api_keys) |
-| `BAIDU_API_KEY` | [百度智能云控制台](https://console.bce.baidu.com) |
-| `BAIDU_SECRET_KEY` | [百度智能云控制台](https://console.bce.baidu.com) |
+| `DEEPSEEK_API_KEY` | [platform.deepseek.com/api_keys](https://platform.deepseek.com/api_keys) |
 
-4. Deploy → 2分钟构建完成
+> MediaPipe 手势识别在浏览器端运行，无需额外API Key。
+
+4. 点击 Deploy，2分钟构建完成
 
 ### 3. 自定义域名 + HTTPS
 
-**Vercel推荐方式**（最简单）:
-1. Dashboard → Settings → Domains → 输入你的域名
-2. 在域名注册商添加 Vercel 提供的 DNS 记录
-3. Vercel 自动签发 Let's Encrypt SSL → HTTPS 就绪
+**添加域名**:
+1. Vercel Dashboard → Settings → Domains → 输入域名（如 `tarot.example.com`）
+2. 在域名注册商添加 Vercel 提供的 DNS 记录（CNAME指向 `cname.vercel-dns.com`）
+3. Vercel 自动签发 Let's Encrypt SSL → HTTPS就绪
 
-**Cloudflare方式**（有CDN加速）:
-1. 域名NS指向Cloudflare
-2. DNS添加 CNAME → `cname.vercel-dns.com`
-3. SSL/TLS设为"Full"
-4. Vercel Domains 添加自定义域名
+**DNS配置示例**:
+
+| Type | Name | Value |
+|------|------|-------|
+| CNAME | tarot | cname.vercel-dns.com |
 
 ### 4. 部署架构
 
 ```
-User → Cloudflare CDN (optional) → Vercel Edge
+User → HTTPS → Vercel Edge Network
   ├── / (Static, cached at Edge)
-  ├── /api/reading (Serverless, Node.js)
-  ├── /api/chat (Serverless, Node.js)
-  └── /api/gesture (Serverless, Node.js)
+  ├── /api/reading (Serverless Function, Node.js)
+  └── /api/chat (Serverless Function, Node.js)
 ```
+
+### 5. 成本
+
+| 项目 | 费用 |
+|------|------|
+| Vercel Hosting | 免费 (100GB带宽/月) |
+| DeepSeek API | ~$0.0005/次解读 |
+| MediaPipe | 免费 (浏览器端) |
+| 域名 | ~$12/年 |
 
 ---
 
 ## 本地开发
 
-### 前置条件
-- Node.js 20+
-- DeepSeek API Key
-- 百度智能云 API Key + Secret Key（开通手势识别服务）
-
-### 启动
-
 ```bash
 git clone https://github.com/your-username/tarot-ai.git
 cd tarot-ai
 cp .env.example .env.local
-# 编辑 .env.local 填入3个API Key
+# 编辑 .env.local，填入 DEEPSEEK_API_KEY=sk-xxx
 npm install
 npm run dev
 # 打开 http://localhost:3000
@@ -430,21 +406,15 @@ npm run dev
 | 层 | 技术 |
 |---|------|
 | 框架 | Next.js 16 (App Router) |
-| 语言 | TypeScript 5 (Strict) |
+| 语言 | TypeScript 5 |
 | 样式 | TailwindCSS 4 |
 | 动画 | framer-motion 11 |
-| AI SDK | Vercel AI SDK v6 (streamText + tool) |
-| AI模型 | DeepSeek V3 (deepseek-chat) |
-| 手势识别 | 百度智能云 手势识别API |
+| AI SDK | Vercel AI SDK v6 |
+| AI模型 | DeepSeek V3 |
+| 手势识别 | MediaPipe Hands (WASM, 30fps) |
 | 卡牌图片 | Rider-Waite-Smith 1909 (Public Domain) |
-| 校验 | Zod 3 |
-| 部署 | Vercel (HTTPS自动) |
-| Toast | sonner |
-
-## License
-
-MIT — 欢迎参考和二次开发。
+| 部署 | Vercel |
 
 ---
 
-*Built with Claude Code — AI-first development.*
+*Built with Claude Code.*
