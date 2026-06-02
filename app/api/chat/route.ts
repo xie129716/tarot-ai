@@ -46,7 +46,7 @@ export async function POST(req: Request) {
     const trimmedMessages = trimConversation(messages, 7000);
 
     const result = streamText({
-      model: deepseek('deepseek-chat'),
+      model: deepseek('deepseek-v4-pro'),
       system: systemPrompt,
       messages: trimmedMessages as { role: 'user' | 'assistant'; content: string }[],
       maxOutputTokens: 1000,

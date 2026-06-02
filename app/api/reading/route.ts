@@ -48,7 +48,7 @@ export async function POST(req: Request) {
       : `我抽到的牌：\n${formatCardsForPrompt(resolvedCards)}`;
 
     const result = streamText({
-      model: deepseek('deepseek-chat'),
+      model: deepseek('deepseek-v4-pro'),
       system: systemPrompt,
       messages: [{ role: 'user', content: userContent }],
       maxOutputTokens: 2000,

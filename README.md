@@ -3,7 +3,7 @@
 > 手势识别选牌 × DeepSeek AI 流式解牌 × 78张RWS塔罗牌
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org)
-[![DeepSeek](https://img.shields.io/badge/AI-DeepSeek_V3-purple)](https://platform.deepseek.com)
+[![DeepSeek](https://img.shields.io/badge/AI-DeepSeek_V4_Pro-purple)](https://platform.deepseek.com)
 [![MediaPipe](https://img.shields.io/badge/Gesture-MediaPipe_30fps-orange)](https://developers.google.com/mediapipe)
 [![Vercel](https://img.shields.io/badge/Deploy-Vercel-black)](https://vercel.com)
 
@@ -70,7 +70,7 @@ WELCOME → SHUFFLING → CARD_SELECTION(3D旋转) → READING → COMPLETE → 
 │  │  /api/reading  — 流式塔罗解牌              │      │
 │  │  /api/chat     — 流式追问 + Function Call  │      │
 │  │                                              │      │
-│  │  → DeepSeek V3 (via Vercel AI SDK v6)       │      │
+│  │  → DeepSeek V4 Pro (via Vercel AI SDK v6)    │      │
 │  │  → 5层动态Prompt组装                        │      │
 │  │  → streamText() → toTextStreamResponse()    │      │
 │  │  → Function Calling: getCardDetail          │      │
@@ -268,15 +268,27 @@ export function trimConversation(messages, maxTokens = 7000) {
 }
 ```
 
-### Token成本
+### DeepSeek V4 Pro
 
-| 场景 | Input | Output | 成本 |
+2026年4月发布，MoE架构，1.6T总参数量（49B激活），1M上下文，262K最大输出。
+
+2026年5月31日起永久降价75%：
+
+| | 价格 (¥) | 价格 (USD) |
+|------|------|------|
+| 输入（缓存未命中） | ¥3 / 1M tokens | ~$0.42 |
+| 输入（缓存命中） | ¥0.025 / 1M tokens | ~$0.0035 |
+| 输出 | ¥6 / 1M tokens | ~$0.84 |
+
+### 本应用Token成本
+
+| 场景 | Input | Output | 成本 (USD) |
 |------|-------|--------|------|
-| 3牌解读 | ~2000 | ~700 | $0.0005 |
-| 10牌凯尔特十字 | ~6000 | ~1500 | $0.001 |
-| 追问对话 | ~3000/轮 | ~400/轮 | $0.0005/轮 |
+| 3牌解读 | ~2000 | ~700 | ~$0.0014 |
+| 10牌凯尔特十字 | ~6000 | ~1500 | ~$0.0038 |
+| 追问对话 | ~3000/轮 | ~400/轮 | ~$0.0016/轮 |
 
-> DeepSeek V3: $0.14/M input, $0.28/M output
+> 日均1000次解读 ≈ $1.50
 
 ---
 
@@ -381,7 +393,7 @@ User → HTTPS → Vercel Edge Network
 | 项目 | 费用 |
 |------|------|
 | Vercel Hosting | 免费 (100GB带宽/月) |
-| DeepSeek API | ~$0.0005/次解读 |
+| DeepSeek V4 Pro | ~$0.0014/次解读 |
 | MediaPipe | 免费 (浏览器端) |
 | 域名 | ~$12/年 |
 
@@ -410,7 +422,8 @@ npm run dev
 | 样式 | TailwindCSS 4 |
 | 动画 | framer-motion 11 |
 | AI SDK | Vercel AI SDK v6 |
-| AI模型 | DeepSeek V3 |
+| AI模型 | DeepSeek V4 Pro (1.6T MoE, 1M ctx, 49B active) |
+| AI定价 | ~$0.42/1M in, ~$0.84/1M out (2026.5 永久降价75%) |
 | 手势识别 | MediaPipe Hands (WASM, 30fps) |
 | 卡牌图片 | Rider-Waite-Smith 1909 (Public Domain) |
 | 部署 | Vercel |
