@@ -128,13 +128,16 @@ function getFingerStates(lm: Array<{ x: number; y: number; z: number }>): Record
 
 function isExtended(lm: Array<{ x: number; y: number; z: number }>, tip: number, pip: number, mcp: number): boolean {
   const a = angleBetween(lm[mcp]!, lm[pip]!, lm[tip]!);
-  return a > 140;
+  // Also check that the fingertip is ABOVE the PIP (y is smaller = higher on screen)
+  const tipAbovePip = lm[tip]!.y < lm[pip]!.y;
+  return a > 155 && tipAbovePip;
 }
 
 function isThumbExtended(lm: Array<{ x: number; y: number; z: number }>): boolean {
-  // Thumb: check distance from tip to index MCP
-  const d = Math.hypot(lm[4]!.x - lm[5]!.x, lm[4]!.y - lm[5]!.y);
-  return d > 0.15;
+  // Thumb extended: tip is far from index finger MCP AND far from wrist
+  const d1 = Math.hypot(lm[4]!.x - lm[5]!.x, lm[4]!.y - lm[5]!.y);
+  const d2 = Math.hypot(lm[4]!.x - lm[0]!.x, lm[4]!.y - lm[0]!.y);
+  return d1 > 0.2 && d2 > 0.2;
 }
 
 function getFingerDebug(hand?: DetectedHand): string {
