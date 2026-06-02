@@ -32,7 +32,7 @@ export function useGestureClassification({
   const onGestureRef = useRef(onGesture);
   onGestureRef.current = onGesture;
 
-  const NULL_THRESHOLD = 2; // ~1s no-hand before releasing (2 frames × 520ms)
+  const NULL_THRESHOLD = 1; // ~1s no-hand before releasing (1 frame × 1000ms)
 
   const processResult = useCallback((result: GestureApiResult) => {
     const { gesture } = result;

@@ -229,7 +229,13 @@ export default function HomePage() {
           break;
 
         case GestureType.FIST:
-          // FIST now does nothing (备用)
+          if (Date.now() - lastSelectRef.current > SELECT_COOLDOWN_MS) {
+            lastSelectRef.current = Date.now();
+            handleCardSelect();
+          }
+          if (carouselPhaseRef.current === 'rotating') {
+            setCarouselWithCooldown('idle');
+          }
           break;
         // Other/unknown → ignore
       }
@@ -248,7 +254,7 @@ export default function HomePage() {
     useHandTracking({
       enabled: gestureEnabled,
       onGestureResult: processResult,
-      captureIntervalMs: 520, // 2 calls/sec at Baidu QPS=2 limit
+      captureIntervalMs: 1000, // 1 call/sec, safely under Baidu QPS limit
     });
   // Wire refs for camera start/stop from effects defined before the hook
   useEffect(() => { stopCameraRef.current = stopCamera; startCameraRef.current = startCamera; }, [stopCamera, startCamera]);
