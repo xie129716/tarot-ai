@@ -266,6 +266,7 @@ export default function HomePage() {
 
   const startCameraRef = useRef<() => Promise<void>>(async () => {});
   const handleShuffleComplete = useCallback(() => {
+    if (phaseRef.current !== 'SHUFFLING') return; // already progressed
     setPhase('CARD_SELECTION');
     setCarouselPhase('idle');
     console.log('[page] SHUFFLING → CARD_SELECTION');
@@ -284,6 +285,16 @@ export default function HomePage() {
       });
     }
   }, [isMobile, gestureEnabled]);
+
+  // Safety fallback: auto-transition from SHUFFLING after 4.5s if animation callback fails
+  useEffect(() => {
+    if (phase !== 'SHUFFLING') return;
+    const timer = setTimeout(() => {
+      console.log('[page] Shuffle safety timeout — forcing transition');
+      handleShuffleComplete();
+    }, 4500);
+    return () => clearTimeout(timer);
+  }, [phase, handleShuffleComplete]);
 
   const handleOpenChat = useCallback(() => setPhase('CHAT_OPEN'), []);
 

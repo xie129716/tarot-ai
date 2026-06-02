@@ -1,6 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRef, useEffect } from 'react';
 
 interface CardDeckProps {
   isShuffling: boolean;
@@ -8,6 +9,15 @@ interface CardDeckProps {
 }
 
 export default function CardDeck({ isShuffling, onShuffleComplete }: CardDeckProps) {
+  // Keep callback ref stable across re-renders
+  const cbRef = useRef(onShuffleComplete);
+  useEffect(() => { cbRef.current = onShuffleComplete; }, [onShuffleComplete]);
+
+  const handleComplete = () => {
+    console.log('[CardDeck] Shuffle animation complete');
+    cbRef.current?.();
+  };
+
   return (
     <div className="relative w-[140px] h-[220px] md:w-[160px] md:h-[260px] mx-auto">
       {/* Multiple stacked cards for deck effect */}
@@ -37,7 +47,7 @@ export default function CardDeck({ isShuffling, onShuffleComplete }: CardDeckPro
                   duration: 1.5,
                   repeat: 2,
                   ease: 'easeInOut',
-                  onComplete: i === 0 ? onShuffleComplete : undefined,
+                  onComplete: i === 0 ? handleComplete : undefined,
                 }
               : { duration: 0.3 }
           }
