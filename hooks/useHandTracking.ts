@@ -89,7 +89,11 @@ export function useHandTracking({
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: 640, height: 480, facingMode: 'user' },
+        video: {
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+          facingMode: 'user',
+        },
       });
       streamRef.current = stream;
 
@@ -121,10 +125,16 @@ export function useHandTracking({
       detectLoop();
     } catch (err: any) {
       setIsLoading(false);
-      if (err.name === 'NotAllowedError') {
-        setError('摄像头权限被拒绝');
+      const msg = err?.message || err?.name || String(err || '');
+      console.error('[useHandTracking] Camera error:', err);
+      if (msg.includes('NotAllowed') || msg.includes('Permission')) {
+        setError('摄像头权限被拒绝，请在浏览器设置中允许摄像头访问');
+      } else if (msg.includes('NotFound') || msg.includes('DevicesNotFound')) {
+        setError('未检测到摄像头设备');
+      } else if (msg.includes('NotReadable') || msg.includes('InUse')) {
+        setError('摄像头被其他应用占用');
       } else {
-        setError(`摄像头启动失败：${err.message}`);
+        setError(`摄像头启动失败：${msg || '未知错误'}`);
       }
     }
   }, [detectLoop]);
