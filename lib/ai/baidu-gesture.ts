@@ -104,6 +104,14 @@ export async function recognizeGesture(
   }
 
   const data = await response.json();
+
+  // ─── Handle QPS / rate-limit errors — don't treat as "no gesture" ───
+  if (data.error_code) {
+    console.warn('[baidu-gesture] API error:', data.error_code, data.error_msg);
+    // Throw so the API route returns a 429, and the client can retry with last known gesture
+    throw new Error(`Baidu API ${data.error_code}: ${data.error_msg}`);
+  }
+
   console.log('[baidu-gesture] Response:', JSON.stringify(data));
 
   if (!data.result || data.result_num === 0) {

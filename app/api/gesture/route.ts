@@ -40,9 +40,18 @@ export async function POST(req: Request) {
       });
     }
 
-    const result = await recognizeGesture(parsed.data.image);
+    const result = await recognizeGesture(parsed.data.image).catch((err: Error) => {
+      if (err.message.includes('18') || err.message.includes('QPS')) {
+        return Response.json(
+          { gesture: null, confidence: 0, className: 'rate_limited', bbox: null, error: 'rate_limited' },
+          { status: 429 }
+        );
+      }
+      throw err;
+    });
 
-    return Response.json({
+    // If catch returned a Response (rate limited), forward it
+    if (result instanceof Response) return result;
       gesture: result.gesture,
       confidence: result.confidence,
       className: result.className,

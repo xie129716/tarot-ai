@@ -87,6 +87,10 @@ export function useHandTracking({
         body: JSON.stringify({ image: base64 }),
       });
 
+      if (response.status === 429) {
+        // Rate limited — silently skip, keep last known gesture
+        return;
+      }
       if (!response.ok) {
         console.warn('[useHandTracking] API error:', response.status);
         return;
