@@ -333,12 +333,12 @@ export default function TarotCarousel({
       {/* HUD */}
       {phase === 'rotating' && (
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/90 border border-purple-500/20 rounded-full px-6 py-2.5">
-          <p className="text-purple-200/70 text-sm">🙏 祈祷旋转 · 🖐️ 张手选择</p>
+          <p className="text-purple-200/70 text-sm">☝️ 食指旋转 · 🖐️ 张手选择</p>
         </div>
       )}
       {phase === 'idle' && (
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/95 border border-purple-500/20 rounded-full px-6 py-2.5 text-center">
-          <p className="text-purple-200/70 text-sm">🖐️ 张手选择当前卡牌 ｜ 🙏 祈祷继续旋转</p>
+          <p className="text-purple-200/70 text-sm">🖐️ 张手选择 ｜ ☝️ 食指旋转</p>
         </div>
       )}
     </div>

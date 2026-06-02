@@ -9,8 +9,8 @@ interface GestureHintProps {
 }
 
 const GESTURE_GUIDE = [
-  { icon: '🙏', action: '祈祷 Prayer', description: '卡牌立体环绕旋转' },
-  { icon: '🖐️', action: '张开手掌', description: '确认选择当前卡牌' },
+  { icon: '☝️', action: '食指 数字1', description: '卡牌立体环绕旋转' },
+  { icon: '🖐️', action: '张手 数字5', description: '确认选择当前卡牌' },
 ];
 
 export default function GestureHint({ isVisible, onDismiss }: GestureHintProps) {

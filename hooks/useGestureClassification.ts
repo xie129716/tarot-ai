@@ -99,11 +99,13 @@ function classifyFromLandmarks(hands: DetectedHand[]): GestureType | null {
   const lm = hand.landmarks;
   const fingers = getFingerStates(lm);
 
-  // OPEN_PALM: all 5 fingers clearly extended
+  // OPEN_PALM (Five): all 5 fingers extended → select card
   if (Object.values(fingers).every((f) => f === true)) return GestureType.OPEN_PALM;
 
-  // FIST: all 5 clearly curled
-  if (Object.values(fingers).every((f) => f === false)) return GestureType.FIST;
+  // ONE: index extended, others curled → rotate
+  if (fingers.index === true && fingers.middle === false && fingers.ring === false && fingers.pinky === false) {
+    return GestureType.PRAYER; // Map to rotation
+  }
 
   return null;
 }

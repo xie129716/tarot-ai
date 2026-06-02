@@ -388,7 +388,7 @@ export default function HomePage() {
                 <p className="text-purple-300/60 max-w-md mx-auto leading-relaxed">
                   {isMobile
                     ? '选择牌阵后，点击卡牌选择。DeepSeek AI 为你解读。'
-                    : '🙏祈祷=旋转 · 🖐️张手=选择'}
+                    : '☝️食指=旋转 · 🖐️张手=选择'}
                 </p>
               </div>
               <div className="flex flex-col items-center gap-3">
