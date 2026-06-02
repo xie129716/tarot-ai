@@ -12,9 +12,20 @@ export default function CardDeck({ isShuffling, onShuffleComplete }: CardDeckPro
   // Keep callback ref stable across re-renders
   const cbRef = useRef(onShuffleComplete);
   useEffect(() => { cbRef.current = onShuffleComplete; }, [onShuffleComplete]);
+  const hasFired = useRef(false);
+
+  useEffect(() => {
+    console.log('[CardDeck] Mounted | isShuffling:', isShuffling);
+    hasFired.current = false;
+  }, [isShuffling]);
 
   const handleComplete = () => {
-    console.log('[CardDeck] Shuffle animation complete');
+    if (hasFired.current) {
+      console.log('[CardDeck] onComplete fired AGAIN — ignoring duplicate');
+      return;
+    }
+    hasFired.current = true;
+    console.log('[CardDeck] Animation onComplete FIRED — calling callback');
     cbRef.current?.();
   };
 

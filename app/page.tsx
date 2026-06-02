@@ -286,13 +286,14 @@ export default function HomePage() {
     }
   }, [isMobile, gestureEnabled]);
 
-  // Safety fallback: auto-transition from SHUFFLING after 4.5s if animation callback fails
+  // Safety fallback: auto-transition from SHUFFLING after 5s if animation callback fails
   useEffect(() => {
     if (phase !== 'SHUFFLING') return;
+    console.log('[page] SHUFFLING phase entered — safety timeout armed (5s)');
     const timer = setTimeout(() => {
-      console.log('[page] Shuffle safety timeout — forcing transition');
+      console.log('[page] Shuffle safety timeout FIRED — forcing transition');
       handleShuffleComplete();
-    }, 4500);
+    }, 5000);
     return () => clearTimeout(timer);
   }, [phase, handleShuffleComplete]);
 
@@ -430,6 +431,12 @@ export default function HomePage() {
             >
               <CardDeck isShuffling={true} onShuffleComplete={handleShuffleComplete} />
               <p className="text-purple-300/60 text-sm animate-pulse">星辰正在洗牌...</p>
+              <button
+                onClick={handleShuffleComplete}
+                className="text-xs text-purple-400/40 hover:text-purple-300 mt-4 transition-colors"
+              >
+                跳过洗牌 →
+              </button>
             </motion.div>
           )}
 
