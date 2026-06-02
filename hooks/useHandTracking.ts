@@ -99,7 +99,17 @@ export function useHandTracking({
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        await videoRef.current.play();
+        videoRef.current.setAttribute('playsinline', '');
+        videoRef.current.setAttribute('webkit-playsinline', '');
+        // Safari needs the video in DOM and visible (even if 1px)
+        videoRef.current.style.width = '1px';
+        videoRef.current.style.height = '1px';
+        videoRef.current.style.opacity = '0.01';
+        await videoRef.current.play().catch(() => {
+          // Some browsers need user gesture — try muted autoplay
+          videoRef.current!.muted = true;
+          return videoRef.current!.play();
+        });
       }
 
       // Load MediaPipe HandLandmarker (WASM, runs in browser)
