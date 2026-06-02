@@ -88,7 +88,12 @@ export function useHandTracking({
       });
 
       if (response.status === 429) {
-        // Rate limited — silently skip, keep last known gesture
+        // Backoff: increase interval temporarily
+        const currentInterval = captureIntervalMs;
+        const newInterval = Math.min(currentInterval * 1.5, 3000);
+        console.warn('[useHandTracking] 429 rate limited — backing off to', newInterval, 'ms');
+        clearInterval(intervalRef.current!);
+        intervalRef.current = setInterval(captureAndSend, newInterval);
         return;
       }
       if (!response.ok) {
