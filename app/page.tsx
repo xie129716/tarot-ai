@@ -402,7 +402,7 @@ export default function HomePage() {
                 <p className="text-purple-300/60 max-w-md mx-auto leading-relaxed">
                   {isMobile
                     ? '选择牌阵后，点击卡牌选择。DeepSeek AI 为你解读。'
-                    : '☝️食指=旋转 · 🖐️张手=选择'}
+                    : '🖐️张手=旋转 · ☝️食指=选择'}
                 </p>
               </div>
               <div className="flex flex-col items-center gap-3">
@@ -474,7 +474,7 @@ export default function HomePage() {
                     onClick={handleManualSelect}
                     className="px-4 py-2 rounded-xl bg-amber-600/30 border border-amber-500/30 text-amber-300 hover:bg-amber-500/40 transition-colors text-sm"
                   >
-                    🖐️ 选择此牌
+                    ☝️ 选择此牌
                   </button>
                 </div>
               )}

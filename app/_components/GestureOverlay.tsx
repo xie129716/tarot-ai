@@ -122,8 +122,8 @@ function GestureBadge({ gesture }: { gesture: GestureEvent | null }) {
   }
 
   const labels: Record<string, { text: string; icon: string }> = {
-    [GestureType.PRAYER]: { text: '旋转!', icon: '☝️' },
-    [GestureType.OPEN_PALM]: { text: '选择!', icon: '🖐️' },
+    [GestureType.PRAYER]: { text: '旋转!', icon: '🖐️' },
+    [GestureType.OPEN_PALM]: { text: '选择!', icon: '☝️' },
   };
 
   const label = labels[gesture.type] ?? { text: gesture.type, icon: '❓' };
