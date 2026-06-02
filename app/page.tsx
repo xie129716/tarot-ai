@@ -267,7 +267,7 @@ export default function HomePage() {
     setPhase('CARD_SELECTION');
     setCarouselPhase('idle');
     console.log('[page] SHUFFLING → CARD_SELECTION');
-    if (!isMobile && !gestureEnabled) {
+    if (!gestureEnabled) {
       toast('是否开启摄像头进行手势控制？', {
         description: '点击下方按钮或直接用手势操作',
         action: {
@@ -297,15 +297,11 @@ export default function HomePage() {
   const handleOpenChat = useCallback(() => setPhase('CHAT_OPEN'), []);
 
   const handleEnableGesture = useCallback(async () => {
-    if (isMobile) {
-      toast.info('移动端暂不支持手势控制，请使用触摸操作');
-      return;
-    }
     setGestureEnabled(true);
     setShowGestureHint(true);
     await new Promise((r) => setTimeout(r, 200));
     await startCamera();
-  }, [isMobile, startCamera]);
+  }, [startCamera]);
 
   const handleDisableGesture = useCallback(() => {
     setGestureEnabled(false);
@@ -405,14 +401,12 @@ export default function HomePage() {
                 >
                   ✨ 开始占卜
                 </motion.button>
-                {!isMobile && (
-                  <button
-                    onClick={handleEnableGesture}
-                    className="text-xs text-purple-400/50 hover:text-purple-300 transition-colors"
-                  >
-                    👋 启用手势控制模式
-                  </button>
-                )}
+                <button
+                  onClick={handleEnableGesture}
+                  className="text-xs text-purple-400/50 hover:text-purple-300 transition-colors"
+                >
+                  👋 启用手势控制模式
+                </button>
               </div>
             </motion.div>
           )}
