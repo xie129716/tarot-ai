@@ -102,9 +102,6 @@ export function useHandTracking({
         videoRef.current.setAttribute('playsinline', '');
         videoRef.current.setAttribute('webkit-playsinline', '');
         // Safari needs the video in DOM and visible (even if 1px)
-        videoRef.current.style.width = '1px';
-        videoRef.current.style.height = '1px';
-        videoRef.current.style.opacity = '0.01';
         await videoRef.current.play().catch(() => {
           // Some browsers need user gesture — try muted autoplay
           videoRef.current!.muted = true;

@@ -53,10 +53,10 @@ export default function GestureOverlay({
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.8, opacity: 0 }}
           >
-            {/* Webcam — hidden, used only for frame capture */}
+            {/* Webcam preview */}
             <video
               ref={videoRef}
-              className="absolute w-0 h-0 opacity-0 pointer-events-none"
+              className="w-48 h-36 md:w-64 md:h-48 object-cover mirror bg-slate-950 rounded-lg"
               autoPlay
               playsInline
               muted
