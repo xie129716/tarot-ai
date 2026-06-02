@@ -180,6 +180,7 @@ export default function HomePage() {
   const lastStateChangeRef = useRef(0);
   const SELECT_COOLDOWN_MS = 2000;
   const lastSelectRef = useRef(0);
+  const pendingSelectRef = useRef(false);
   const COOLDOWN_MS = 600;
 
   const setCarouselWithCooldown = useCallback((newPhase: CarouselPhase) => {
@@ -218,13 +219,14 @@ export default function HomePage() {
           break;
 
         case GestureType.OPEN_PALM:
-          if (Date.now() - lastSelectRef.current > SELECT_COOLDOWN_MS) {
+          if (carouselPhaseRef.current === 'rotating') {
+            // Rotating → stop first, selection fires after snap animation completes
+            pendingSelectRef.current = true;
+            setCarouselWithCooldown('idle');
+          } else if (Date.now() - lastSelectRef.current > SELECT_COOLDOWN_MS) {
+            // Already idle → select immediately
             lastSelectRef.current = Date.now();
             handleCardSelect();
-          }
-          // OK in rotating mode → stop (user wants to select)
-          if (carouselPhaseRef.current === 'rotating') {
-            setCarouselWithCooldown('idle');
           }
           break;
 
@@ -240,6 +242,18 @@ export default function HomePage() {
   });
 
   useEffect(() => { resetGesturesRef.current = resetGestures; }, [resetGestures]);
+
+  // Fire pending selection after carousel snap animation completes
+  useEffect(() => {
+    if (carouselPhase === 'idle' && pendingSelectRef.current) {
+      const timer = setTimeout(() => {
+        pendingSelectRef.current = false;
+        lastSelectRef.current = Date.now();
+        handleCardSelect();
+      }, 800); // wait for 0.7s snap animation + buffer
+      return () => clearTimeout(timer);
+    }
+  }, [carouselPhase, handleCardSelect]);
 
   const { videoRef, isLoading: cameraLoading, error: cameraError, startCamera, stopCamera } =
     useHandTracking({
