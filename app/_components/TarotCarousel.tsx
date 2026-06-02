@@ -86,29 +86,40 @@ export default function TarotCarousel({
   }
 
   // Preload card images — track which are ready, notify parent
-  const imagesReadyRef = useRef<Set<number>>(new Set());
+  const [imagesLoaded, setImagesLoaded] = useState(0);
+  const imagesTotal = shuffledDeck.length;
+  const allImagesReady = imagesLoaded >= imagesTotal;
   const onImageReadyRef = useRef(onImageReady);
   onImageReadyRef.current = onImageReady;
 
   useEffect(() => {
+    setImagesLoaded(0);
     const ready = new Set<number>();
-    let pending = shuffledDeck.length;
+    let loaded = 0;
     shuffledDeck.forEach((card) => {
       const img = new window.Image();
       img.onload = () => {
         ready.add(card.id);
-        pending--;
-        if (pending === 0) onImageReadyRef.current?.(ready);
+        loaded++;
+        setImagesLoaded(loaded);
+        if (loaded >= shuffledDeck.length) onImageReadyRef.current?.(ready);
       };
       img.onerror = () => {
-        pending--;
+        loaded++;
+        setImagesLoaded(loaded);
         console.warn('[carousel] Image failed:', card.imagePath);
-        if (pending === 0) onImageReadyRef.current?.(ready);
+        if (loaded >= shuffledDeck.length) onImageReadyRef.current?.(ready);
       };
       img.src = card.imagePath;
     });
-    imagesReadyRef.current = ready;
   }, [shuffledDeck]);
+
+  // Expose image-ready to parent
+  useEffect(() => {
+    if (allImagesReady && imagesLoaded > 0) {
+      onImageReadyRef.current?.(new Set(shuffledDeck.map(c => c.id)));
+    }
+  }, [allImagesReady, imagesLoaded, shuffledDeck]);
 
 
 
@@ -298,6 +309,26 @@ export default function TarotCarousel({
           })}
         </motion.div>
       </div>
+
+      {/* Image loading overlay */}
+      {!allImagesReady && (
+        <div className="absolute inset-0 flex items-center justify-center bg-slate-950/80 z-30">
+          <div className="text-center">
+            <div className="flex gap-1.5 justify-center mb-3">
+              {[0, 1, 2].map((i) => (
+                <motion.div
+                  key={i}
+                  className="w-2.5 h-2.5 rounded-full bg-purple-400"
+                  animate={{ opacity: [0.3, 1, 0.3] }}
+                  transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
+                />
+              ))}
+            </div>
+            <p className="text-purple-300/80 text-sm">卡牌资源加载中...</p>
+            <p className="text-purple-400/40 text-xs mt-1">{imagesLoaded}/{imagesTotal}</p>
+          </div>
+        </div>
+      )}
 
       {/* HUD */}
       {phase === 'rotating' && (
