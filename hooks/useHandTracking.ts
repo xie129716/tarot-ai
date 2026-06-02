@@ -1,21 +1,22 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { GestureType } from '@/lib/gestures/types';
+
+export interface HandLandmark {
+  x: number;
+  y: number;
+  z: number;
+}
+
+export interface DetectedHand {
+  landmarks: HandLandmark[];
+  handedness: 'Left' | 'Right';
+}
 
 interface UseHandTrackingOptions {
   enabled: boolean;
-  /** Called with the recognized gesture data */
-  onGestureResult?: (result: GestureApiResult) => void;
-  /** Interval between API calls in ms (default 400 - ~2.5fps to control API cost) */
-  captureIntervalMs?: number;
-}
-
-export interface GestureApiResult {
-  gesture: GestureType | null;
-  confidence: number;
-  className: string;
-  bbox: { left: number; top: number; width: number; height: number } | null;
+  /** Called at ~30fps with detected hands */
+  onHandsDetected?: (hands: DetectedHand[]) => void;
 }
 
 interface UseHandTrackingReturn {
@@ -29,102 +30,66 @@ interface UseHandTrackingReturn {
 
 export function useHandTracking({
   enabled,
-  onGestureResult,
-  captureIntervalMs = 300,
+  onHandsDetected,
 }: UseHandTrackingOptions): UseHandTrackingReturn {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const onResultRef = useRef(onGestureResult);
-  onResultRef.current = onGestureResult;
+  const handLandmarkerRef = useRef<any>(null);
+  const animFrameRef = useRef(0);
+  const onHandsRef = useRef(onHandsDetected);
+  onHandsRef.current = onHandsDetected;
 
   const stopCamera = useCallback(() => {
     console.log('[useHandTracking] Stopping camera...');
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current.getTracks().forEach((t) => t.stop());
       streamRef.current = null;
     }
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
+    if (animFrameRef.current) {
+      cancelAnimationFrame(animFrameRef.current);
+      animFrameRef.current = 0;
     }
     if (videoRef.current) {
       videoRef.current.srcObject = null;
     }
     setIsLoaded(false);
-    console.log('[useHandTracking] Camera stopped.');
   }, []);
 
-  const captureAndSend = useCallback(async () => {
+  const detectLoop = useCallback(() => {
     const video = videoRef.current;
-    const canvas = canvasRef.current;
-    if (!video || !canvas || video.readyState < 2) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    // Match canvas size to video
-    canvas.width = video.videoWidth || 640;
-    canvas.height = video.videoHeight || 480;
-
-    // Draw current video frame to canvas
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-    // Get base64 (remove data:image prefix)
-    const fullDataUrl = canvas.toDataURL('image/jpeg', 0.7);
-    const base64 = fullDataUrl.split(',')[1];
-
-    if (!base64 || base64.length < 100) return;
-
-    try {
-      const response = await fetch('/api/gesture', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: base64 }),
-      });
-
-      if (response.status === 429) {
-        // Backoff: increase interval temporarily
-        const currentInterval = captureIntervalMs;
-        const newInterval = Math.min(currentInterval * 1.5, 3000);
-        console.warn('[useHandTracking] 429 rate limited — backing off to', newInterval, 'ms');
-        clearInterval(intervalRef.current!);
-        intervalRef.current = setInterval(captureAndSend, newInterval);
-        return;
-      }
-      if (!response.ok) {
-        console.warn('[useHandTracking] API error:', response.status);
-        return;
-      }
-
-      const result: GestureApiResult = await response.json();
-      // DEBUG: suppress gesture API logs
-      // if (Math.random() < 0.1) { console.log('[useHandTracking] Gesture result:', JSON.stringify(result)); }
-      onResultRef.current?.(result);
-    } catch (err: any) {
-      if (err.name !== 'AbortError') {
-        console.warn('[useHandTracking] Capture error:', err.message);
-      }
+    const handLandmarker = handLandmarkerRef.current;
+    if (!video || !handLandmarker || video.readyState < 2) {
+      animFrameRef.current = requestAnimationFrame(detectLoop);
+      return;
     }
+
+    const results = handLandmarker.detectForVideo(video, performance.now());
+    if (results?.landmarks?.length > 0) {
+      const hands: DetectedHand[] = results.landmarks.map(
+        (lm: any, i: number) => ({
+          landmarks: lm.map((p: any) => ({ x: p.x, y: p.y, z: p.z })),
+          handedness: results.handedness?.[i]?.[0]?.categoryName ?? 'Right',
+        })
+      );
+      onHandsRef.current?.(hands);
+    } else {
+      onHandsRef.current?.([]);
+    }
+
+    animFrameRef.current = requestAnimationFrame(detectLoop);
   }, []);
 
   const startCamera = useCallback(async () => {
     setIsLoading(true);
     setError(null);
-    console.log('[useHandTracking] Starting camera...');
+    console.log('[useHandTracking] Starting camera + MediaPipe...');
 
     try {
-      // Start webcam
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          width: { ideal: 640 },
-          height: { ideal: 480 },
-          facingMode: 'user',
-        },
+        video: { width: 640, height: 480, facingMode: 'user' },
       });
       streamRef.current = stream;
 
@@ -133,44 +98,41 @@ export function useHandTracking({
         await videoRef.current.play();
       }
 
-      // Create off-screen canvas for frame capture
-      if (!canvasRef.current) {
-        canvasRef.current = document.createElement('canvas');
+      // Load MediaPipe HandLandmarker (WASM, runs in browser)
+      if (!handLandmarkerRef.current) {
+        const { HandLandmarker, FilesetResolver } = await import('@mediapipe/tasks-vision');
+        const vision = await FilesetResolver.forVisionTasks(
+          'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.18/wasm'
+        );
+        handLandmarkerRef.current = await HandLandmarker.createFromOptions(vision, {
+          baseOptions: {
+            modelAssetPath:
+              'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task',
+            delegate: 'GPU',
+          },
+          runningMode: 'VIDEO',
+          numHands: 2,
+        });
       }
 
       setIsLoaded(true);
       setIsLoading(false);
-
-      // Start periodic capture → API calls
-      intervalRef.current = setInterval(() => {
-        captureAndSend();
-      }, captureIntervalMs);
-
-      console.log('[useHandTracking] Camera started, capturing every', captureIntervalMs, 'ms');
+      console.log('[useHandTracking] MediaPipe ready — starting detection loop');
+      detectLoop();
     } catch (err: any) {
       setIsLoading(false);
       if (err.name === 'NotAllowedError') {
-        setError('摄像头权限被拒绝。请在浏览器设置中允许摄像头访问。');
+        setError('摄像头权限被拒绝');
       } else {
         setError(`摄像头启动失败：${err.message}`);
       }
     }
-  }, [captureAndSend, captureIntervalMs]);
+  }, [detectLoop]);
 
-  // Cleanup on unmount or when disabled
   useEffect(() => {
-    if (!enabled) {
-      stopCamera();
-    }
+    if (!enabled) stopCamera();
     return () => stopCamera();
   }, [enabled, stopCamera]);
 
-  return {
-    isLoaded,
-    isLoading,
-    error,
-    startCamera,
-    stopCamera,
-    videoRef,
-  };
+  return { isLoaded, isLoading, error, startCamera, stopCamera, videoRef };
 }

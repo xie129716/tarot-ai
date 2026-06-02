@@ -234,8 +234,8 @@ export default function HomePage() {
     [doReset, handleCardSelect, setCarouselWithCooldown]
   );
 
-  // ─── Gesture pipeline ───
-  const { processResult, reset: resetGestures } = useGestureClassification({
+  // ─── Gesture pipeline (MediaPipe — real-time, 30fps, browser-side) ───
+  const { processHands, reset: resetGestures } = useGestureClassification({
     onGesture: handleGesture,
   });
 
@@ -244,8 +244,7 @@ export default function HomePage() {
   const { videoRef, isLoading: cameraLoading, error: cameraError, startCamera, stopCamera } =
     useHandTracking({
       enabled: gestureEnabled,
-      onGestureResult: processResult,
-      captureIntervalMs: 1200, // 1 call per 1.2s — well under Baidu QPS=2
+      onHandsDetected: processHands,
     });
   // Wire refs for camera start/stop from effects defined before the hook
   useEffect(() => { stopCameraRef.current = stopCamera; startCameraRef.current = startCamera; }, [stopCamera, startCamera]);
